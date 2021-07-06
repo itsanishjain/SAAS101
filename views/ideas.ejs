@@ -1,0 +1,52 @@
+<%- include('dashboard')%>
+    <h1>Idea page</h1>
+
+    <div>
+        <input id="prompt" type="text" name="prompt" placeholder="enter your text" required>
+        <input id="idea-generate"  value="Generate" type="submit"/>
+    </div>
+
+    <div id="GPT3-idea-response">
+
+    </div>
+
+
+    <script>
+        const ideaGenerate = document.getElementById('idea-generate');
+        ideaGenerate.addEventListener("click", () => {
+
+            console.log("Calling GPT3 for ideas generations")
+            const url = '/ideas'
+            const prompt = document.getElementById("prompt").value;
+            const body = JSON.stringify({
+                prompt: prompt,
+                userid:"1234",
+            })
+            const options = { method: 'POST', headers: { "Content-Type": "application/json" }, body: body }
+
+            fetch(url, options).then(response => {
+                console.log(response);
+                return response.json();
+            }).then(result => {
+                console.log(result);
+                const GPT3IdeaResponse = document.getElementById('GPT3-idea-response')
+
+                GPT3IdeaResponse.innerHTML = `<p>${result.text}</p>`
+                
+
+
+            }).catch(error => {
+                console.log("Erron in calling ideas API", error);
+            })
+
+
+        })
+
+
+
+
+
+
+
+
+    </script>
