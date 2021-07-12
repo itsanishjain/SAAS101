@@ -1,6 +1,51 @@
-<h1>Dashboard</h1>
+<!DOCTYPE html>
+<html lang="en">
 
-<a href="/ideas">Fundraising Ideas</a>
-<a href="#">Usages</a>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>RoyalUI Admin</title>
+    <!-- plugins:css -->
+    <link rel="stylesheet" href="vendors/ti-icons/css/themify-icons.css">
+    <link rel="stylesheet" href="vendors/base/vendor.bundle.base.css">
+    <!-- endinject -->
+    <!-- plugin css for this page -->
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- endinject -->
+    <link rel="shortcut icon" href="images/favicon.png" />
+</head>
+
+<body>
+    <div class="container-scroller">
+        <%- include('./partials/_navbar')%>
 
 
+            <div class="container-fluid page-body-wrapper">
+
+                <%- include('./partials/_sidebar')%>
+
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+
+                            <div class="row">
+                                <div class="col-md-12 grid-margin">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h4 class="font-weight-bold mb-0">Home</h4>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <%- include('./partials/_footer') %>
+                    </div>
+            </div>
+    </div>
+
+
+</body>

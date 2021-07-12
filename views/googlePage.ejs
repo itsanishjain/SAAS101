@@ -1,0 +1,29 @@
+<h3>Google SignIn</h3>
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+
+
+
+<button onclick="init()">Google SignIn</button>
+
+
+<a href="https://github.com/login/oauth/authorize?client_id=18b39c8ed9ee6f62c1fc" class="btn btn-danger"><span class="fa fa-github"></span> Github Login</a>
+
+
+
+<script>
+ function init() {
+  gapi.load('auth2', function() {
+      console.log("Here I am");
+      gapi.auth2.init({
+          client_id:"369662659886-b48hh31n5na6fih590g6tgoo89uqvcsc.apps.googleusercontent.com",
+      })
+
+      gapi.auth2.SignInOptions({
+          scope:'profile'
+      }).then(response=>{console.log(response)})
+    
+    
+
+  });
+}
+</script>

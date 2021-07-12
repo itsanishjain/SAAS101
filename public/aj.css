@@ -1,0 +1,19 @@
+body{
+    background-color:whitesmoke;
+    font-size: 1.2rem;
+}
+
+
+
+.mine-container{
+    max-width: 90%;
+    margin: 0 auto;
+}
+
+.white-card{
+    background-color: white;
+    font-size: 1rem;
+    border: 0.001rem solid gray;
+    border-radius: 4px;
+    padding: 0.6rem;
+}

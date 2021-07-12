@@ -1,13 +1,18 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+const bcrypt = require('bcrypt');
 const OpenAI = require("openai-api");
-const { encode, decode } = require("gpt-3-encoder");
+const cookieParser = require("cookie-parser");
+const { encode } = require("gpt-3-encoder");
+const jwt = require("jsonwebtoken");
+
+const app = express();
 require("dotenv").config();
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const openai = new OpenAI(OPENAI_API_KEY);
+const openai = new OpenAI(process.env.OPENAI_API_KEY);
+const User = require("./models/User")
 
+// establish connection to database
 mongoose
   .connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
@@ -16,42 +21,68 @@ mongoose
   .then(() => console.log("Connected"))
   .catch((error) => console.log(error.message));
 
-const app = express();
-
+// middleware
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
+
+// setting template engine
 app.set("view engine", "ejs");
 
-//Export Modules
-const User = require("./models/User");
+
 
 //signup
 app.get("/", (req, res) => {
-  res.render("signup");
+  res.render("pages/register");
 });
 
 app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  console.log("signup", user);
   if (!user) {
+
+    console.log(email,password)
     const hashPassword = bcrypt.hashSync(password, 10);
-    const newUser = User({ email, password: hashPassword });
+
+    console.log(hashPassword)
+
+
+
+    const newUser = User({ email:email, password: hashPassword });
     await newUser.save();
+    const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
+    res.cookie("JWT", accessToken, { secure: true, httpOnly: true });
     return res.redirect("/dashboard");
   }
-  return res.redirect("/");
+  return res.redirect("/login");
 });
 
 // login
+app.get("/login", (req, res) => {
+  const accessToken = req.cookies.JWT;
+  console.log(accessToken);
+  try {
+    const payload = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+    console.log(payload);
+    res.redirect("/dashboard");
+  } catch (error) {
+    console.log(error);
+  }
+  res.render("login");
+});
+
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  console.log("Here");
-  const user = await User.findOne({ email: email });
+  const user = await User.findOne({ email });
   console.log("login", user);
   if (user) {
     if (bcrypt.compare(password, user.password)) {
+      const accessToken = Utils.generateAccessToken({ email });
+
+      await user.save();
+
+      res.cookie("jwt", accessToken, { secure: true, httpOnly: true });
       return res.redirect("/dashboard");
     } else {
       return res.redirect("/login");
@@ -60,16 +91,12 @@ app.post("/login", async (req, res) => {
   return res.redirect("/");
 });
 
-app.get("/login", (req, res) => {
-  res.render("login");
-});
-
-//socail login ['Google']
-
 //dashboard
-app.get("/dashboard", (req, res) => {
+app.get("/dashboard", async (req, res) => {
   res.render("dashboard");
 });
+
+//########################## GPT3 ####################################3
 
 //GPT3-API
 
@@ -109,7 +136,7 @@ async function contentFilter(responseText) {
 
 function tokensCount(text) {
   const count = encode(text).length;
-  console.log("HERE",count)
+  console.log("HERE", count);
   return count;
 }
 
@@ -123,6 +150,7 @@ app.post("/ideas", async (req, res) => {
   // calling openai
 
   const { prompt, userid } = req.body;
+
   let totalcount = 0;
   // console.log(prompt,userid);
 
@@ -132,7 +160,7 @@ app.post("/ideas", async (req, res) => {
   try {
     const gptResponse = await openai.complete({
       engine: "ada",
-      prompt: prompt,
+      prompt: prompt.trim(),
       maxTokens: 5,
       temperature: 0.9,
       topP: 1,
@@ -163,5 +191,6 @@ app.post("/ideas", async (req, res) => {
   }
 });
 
-const PORT = 8003;
+const PORT = process.env.PORT || 8003;
+
 app.listen(PORT, () => console.log(`server is running on PORT ${PORT}`));
