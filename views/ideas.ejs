@@ -5,7 +5,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>RoyalUI Admin</title>
+    <title>SAAS101</title>
     <!-- plugins:css -->
     <link rel="stylesheet" href="vendors/ti-icons/css/themify-icons.css">
     <link rel="stylesheet" href="vendors/base/vendor.bundle.base.css">
@@ -54,7 +54,11 @@
                             </div>
 
 
-                            <div id="GPT3-idea-response"></div>
+
+                            <div class="card" id="generatedText">
+
+
+                            </div>
                         </div>
                         <%- include('./partials/_footer') %>
                     </div>
@@ -123,9 +127,14 @@ document.getElementById("submitPrompt").innerHTML = 'Generating <div class="spin
             return response.json();
         }).then(result => {
             console.log(result);
-            const GPT3IdeaResponse = document.getElementById('GPT3-idea-response')
+            // const GPT3IdeaResponse = document.getElementById('GPT3-idea-response')
             ideaGenerate.innerHTML = "Generate"
-            GPT3IdeaResponse.innerHTML = `<p>${result.text}</p>`
+            // GPT3IdeaResponse.innerHTML = `<p>${result.text}</p>`
+
+            document.getElementById('generatedText').innerHTML = `<div class="card-body" id="GPT3-idea-response">
+                                    ${result.text}
+                                </div>`
+
 
 
 

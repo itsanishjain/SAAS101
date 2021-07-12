@@ -1,6 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 const OpenAI = require("openai-api");
 const cookieParser = require("cookie-parser");
 const { encode } = require("gpt-3-encoder");
@@ -10,7 +10,7 @@ const app = express();
 require("dotenv").config();
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
-const User = require("./models/User")
+const User = require("./models/User");
 
 // establish connection to database
 mongoose
@@ -30,8 +30,6 @@ app.use(express.static("public"));
 // setting template engine
 app.set("view engine", "ejs");
 
-
-
 //signup
 app.get("/", (req, res) => {
   res.render("pages/register");
@@ -41,15 +39,8 @@ app.post("/signup", async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
-
-    console.log(email,password)
     const hashPassword = bcrypt.hashSync(password, 10);
-
-    console.log(hashPassword)
-
-
-
-    const newUser = User({ email:email, password: hashPassword });
+    const newUser = User({ email: email, password: hashPassword });
     await newUser.save();
     const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
     res.cookie("JWT", accessToken, { secure: true, httpOnly: true });
@@ -69,7 +60,7 @@ app.get("/login", (req, res) => {
   } catch (error) {
     console.log(error);
   }
-  res.render("login");
+  res.render("pages/login");
 });
 
 app.post("/login", async (req, res) => {
@@ -78,13 +69,11 @@ app.post("/login", async (req, res) => {
   console.log("login", user);
   if (user) {
     if (bcrypt.compare(password, user.password)) {
-      const accessToken = Utils.generateAccessToken({ email });
-
-      await user.save();
-
-      res.cookie("jwt", accessToken, { secure: true, httpOnly: true });
+      const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
+      res.cookie("JWT", accessToken, { secure: true, httpOnly: true });
       return res.redirect("/dashboard");
     } else {
+      console.log("Password error")
       return res.redirect("/login");
     }
   }
