@@ -1,65 +1,59 @@
 const router = require("express").Router();
-const { google } = require("googleapis");
-const axios = require("axios");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const User = require("../models/User");
 
-//get google signIn
-router.get("/google", (req, res) => {
-//   const googleSignedIn = req.cookies.googleSignedIn;
-//   console.log(googleSignedIn);
-//   if (googleSignedIn) {
-//     return res.redirect("/user/dashboard");
-//   }
-//   console.log("Here Here");
-//   res.cookie("googleSignedIn", true);
-  res.render("googlePage");
-});
-//post google signIn
-// router.post("/google", (req, res) => {
-//   res.send("sigiup successfully");
-// });
+function authCheck(req,res,next){
+  console.log("hey");
+}
 
-
-
-
-// Import the axios library, to make HTTP requests
-
-// This is the client ID and client secret that you obtained
-// while registering on github app
-const clientID = "18b39c8ed9ee6f62c1fc";
-const clientSecret = "5da22d9f61d73a49f8f948130965677df8da4378";
-
-// Declare the callback route
-router.get("/google", (req, res) => {
-  // The req.query object has the query params that were sent to this route.
-  const requestToken = req.query.code;
-
-  console.log(requestToken,"FSDFDSFDSFDSF")
-
-  axios({
-    method: "post",
-    url: `https://github.com/login/oauth/access_token?client_id=${clientID}&client_secret=${clientSecret}&code=${requestToken}`,
-    // Set the content type header, so that we get the response in JSON
-    headers: {
-      accept: "application/json",
-    },
-  }).then((response) => {
-    access_token = response.data.access_token;
-    res.redirect("/success");
-  });
+router.post("/signup", async (req, res) => {
+  const { email, password } = req.body;
+  console.log(email,password)
+  const user = await User.findOne({ email });
+  if (!user) {
+    const hashPassword = bcrypt.hashSync(password, 10);
+    const newUser = User({ email: email, password: hashPassword });
+    await newUser.save();
+    const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
+    res.cookie("JWT", accessToken, { secure: true, httpOnly: true });
+    return res.redirect("/dashboard");
+  }
+  console.log(user)
+  return res.redirect("/auth/login");
 });
 
-router.get("/success", function (req, res) {
-    console.log("I am on success Route")
-  axios({
-    method: "get",
-    url: `https://api.github.com/user`,
-    headers: {
-      Authorization: "token " + access_token,
-    },
-  }).then((response) => {
-    console.log(response.data)
-    res.render("dashboard", { userData: response.data });
-  });
+// login
+router.get("/login", (req, res) => {
+  const accessToken = req.cookies.JWT;
+  console.log(accessToken,'Woo');
+  try {
+    const payload = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+    console.log(payload);
+    res.redirect("/dashboard");
+  } catch (error) {
+    console.log(error,"Here I am ");
+
+  }
+  res.render("login");
+});
+
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  console.log(email,password)
+  const user = await User.findOne({ email });
+  console.log("login", user);
+  if (user) {
+    if (bcrypt.compare(password, user.password)) {
+      const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
+      res.cookie("JWT", accessToken, { secure: true, httpOnly: true });
+      return res.redirect("/dashboard");
+    } else {
+      console.log("Password error");
+      return res.redirect("/login");
+    }
+  }
+  return res.redirect("/");
 });
 
 module.exports = router;

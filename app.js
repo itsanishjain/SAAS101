@@ -1,16 +1,37 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const OpenAI = require("openai-api");
+const passport = require("passport");
 const cookieParser = require("cookie-parser");
-const { encode } = require("gpt-3-encoder");
-const jwt = require("jsonwebtoken");
+const cookieSession = require("cookie-session");
+const cors = require("cors");
 
-const app = express();
+const OpenAI = require("openai-api");
+const { encode } = require("gpt-3-encoder");
+
+const passportSetup = require("./config/passportSetup");
+
 require("dotenv").config();
 
+const app = express();
+app.use(cors());
+
+// set up session cookies
+app.use(
+  cookieSession({
+    maxAge: 24 * 60 * 60 * 1000,
+    keys: [process.env.SESSION_COOKIE_KEY],
+  })
+);
+
+// initialize passport
+app.use(passport.initialize());
+app.use(passport.session());
+
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
-const User = require("./models/User");
+
+const paymentsRoute = require("./routes/payments");
+const authRoute = require("./routes/auth");
+const socialAuth = require("./routes/socialAuth");
 
 // establish connection to database
 mongoose
@@ -30,62 +51,30 @@ app.use(express.static("public"));
 // setting template engine
 app.set("view engine", "ejs");
 
+//Routes
+app.use("/payments", paymentsRoute);
+app.use("/auth", authRoute);
+app.use("/social", socialAuth);
+
+const authCheck = (req, res, next) => {
+  if (!req.user) {
+    console.log("HI THis");
+    res.redirect("/auth/login");
+  } else {
+    console.log("Its OK");
+    next();
+  }
+};
+
 //signup
 app.get("/", (req, res) => {
-  res.render("pages/register");
-});
-
-app.post("/signup", async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) {
-    const hashPassword = bcrypt.hashSync(password, 10);
-    const newUser = User({ email: email, password: hashPassword });
-    await newUser.save();
-    const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
-    res.cookie("JWT", accessToken, { secure: true, httpOnly: true });
-    return res.redirect("/dashboard");
-  }
-  return res.redirect("/login");
-});
-
-// login
-app.get("/login", (req, res) => {
-  const accessToken = req.cookies.JWT;
-  console.log(accessToken);
-  try {
-    const payload = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-    console.log(payload);
-    res.redirect("/dashboard");
-  } catch (error) {
-    console.log(error);
-  }
-  res.render("pages/login");
-});
-
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  console.log("login", user);
-  if (user) {
-    if (bcrypt.compare(password, user.password)) {
-      const accessToken = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET);
-      res.cookie("JWT", accessToken, { secure: true, httpOnly: true });
-      return res.redirect("/dashboard");
-    } else {
-      console.log("Password error")
-      return res.redirect("/login");
-    }
-  }
-  return res.redirect("/");
+  res.render("signup");
 });
 
 //dashboard
-app.get("/dashboard", async (req, res) => {
-  res.render("dashboard");
+app.get("/dashboard", authCheck, (req, res) => {
+  res.render("dashboard", { user: req.user });
 });
-
-//########################## GPT3 ####################################3
 
 //GPT3-API
 
