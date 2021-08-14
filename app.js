@@ -76,7 +76,8 @@ app.get("/dashboard", authCheck, (req, res) => {
   res.render("dashboard", { user: req.user });
 });
 
-//GPT3-API
+//GPT3-API 
+// have to make another file for this code
 
 // Content Filter Helper Function
 async function contentFilter(responseText) {
