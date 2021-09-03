@@ -21,7 +21,7 @@ var GoogleStrategy = require("passport-google-oauth20").Strategy;
 var mongoose = require("mongoose");
 mongoose
   .connect(
-    "mongodb+srv://admin:admin@cluster0.cydnc.mongodb.net/CODEX?retryWrites=true&w=majority",
+    "mongodb+srv://YOUR_username:YOUR_PASS@cluster0.cydnc.mongodb.net/CODEX?retryWrites=true&w=majority",
     { useNewUrlParser: true, useUnifiedTopology: true }
   )
   .then((mess) => console.log("CONECTED"))
@@ -134,8 +134,8 @@ passport.use(
   new GoogleStrategy(
     {
       clientID:
-        "369662659886-b48hh31n5na6fih590g6tgoo89uqvcsc.apps.googleusercontent.com",
-      clientSecret: "_0l0dm55FDNE6fVB2Xnf_OAo",
+        "YOUR",
+      clientSecret: "YOUR",
       callbackURL: "http://localhost:3000/auth/google/secrets",
     },
     function (accessToken, refreshToken, profile, cb) {
